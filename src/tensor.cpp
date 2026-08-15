@@ -1,4 +1,7 @@
-#include "../include/tensor.hpp"
+#include "tensor.hpp"
+
+#include <stdexcept>
+#include <utility>
 
 Tensor::Tensor(std::vector<size_t> shape) : shape_(std::move(shape)) {
     if(shape_.empty()) {
@@ -30,5 +33,33 @@ size_t Tensor::offset(const std::vector<size_t>& indices) const {
 }
 
 float& Tensor::at(const std::vector<size_t>& indices) {
+    return data_[offset(indices)];
+}
+
+float* Tensor::data() {
+    return data_.data();
+}
+
+const float* Tensor::data() const {
+    return data_.data();
+}
+
+const std::vector<size_t>& Tensor::shape() const {
+    return shape_;
+}
+
+const std::vector<size_t>& Tensor::strides() const {
+    return strides_;
+}
+
+size_t Tensor::ndim() const {
+    return shape_.size();
+}
+
+size_t Tensor::size() const {
+    return data_.size();
+}
+
+const float& Tensor::at(const std::vector<size_t>& indices) const {
     return data_[offset(indices)];
 }
