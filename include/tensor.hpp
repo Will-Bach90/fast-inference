@@ -18,6 +18,8 @@ class Tensor {
         float& at(const std::vector<size_t>& indices);
         const float& at(const std::vector<size_t>& indices) const;
 
+        size_t offset(const std::vector<size_t>& indices) const;
+
     private:
         std::vector<float> data_;
         std::vector<size_t> shape_;
