@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(fast-inference
     src/tensor.cpp
+    src/operator.cpp
 )
 
 target_include_directories(fast-inference
