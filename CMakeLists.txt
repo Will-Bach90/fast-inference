@@ -28,3 +28,17 @@ target_link_libraries(test_tensor
     PRIVATE
         fast-inference
 )
+
+add_executable(operator_benchmark
+    benchmarks/operator_benchmark.cpp
+)
+
+target_link_libraries(operator_benchmark
+    PRIVATE
+        fast-inference
+)
+
+target_compile_options(fast-inference
+    PRIVATE
+        -O3
+)
