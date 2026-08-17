@@ -18,3 +18,12 @@ target_include_directories(fast-inference
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
 )
+
+add_executable(test_tensor
+    tests/tensor_test.cpp
+)
+
+target_link_libraries(test_tensor
+    PRIVATE
+        fast-inference
+)
