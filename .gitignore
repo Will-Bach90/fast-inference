@@ -1,1 +1,4 @@
 /build
+/build-O0
+/build-O3
+operator.s

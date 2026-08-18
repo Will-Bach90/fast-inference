@@ -10,8 +10,18 @@ namespace ops {
             throw std::invalid_argument("Output tensor must have the correct shape");
         }
 
-        for(size_t i = 0; i < a.size(); ++i) {
-            output.data()[i] = a.data()[i] + b.data()[i];
+        // for(size_t i = 0; i < a.size(); ++i) {
+        //     output.data()[i] = a.data()[i] + b.data()[i];
+        // }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+        const size_t size = a.size();
+
+        for(size_t i = 0; i < size; ++i) {
+            output_data[i] = a_data[i] + b_data[i];
         }
     }
 
@@ -64,6 +74,9 @@ namespace ops {
             throw std::invalid_argument("Output tensor must have the correct shape");
         }
 
+        // const float* a_data = a.data();
+        // const float* b_data = b.data();
+        // float* output_data = output.data();
         for(size_t i = 0; i < M; ++i) {
             for(size_t j = 0; j < N; ++j) {
                 float sum = 0.0f;
