@@ -23,12 +23,13 @@ int main() {
             a.data()[j] = 1.0f;
             b.data()[j] = 1.0f;
         }
-
+        std::fill(output.data(), output.data() + output.size(), 0.0f);
         ops::matmul(a, b, output);
 
         auto start = std::chrono::steady_clock::now();
 
         for(int i = 0; i < 10; ++i) {
+            std::fill(output.data(), output.data() + output.size(), 0.0f);
             ops::matmul(a, b, output);
         }
 

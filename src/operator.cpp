@@ -74,16 +74,39 @@ namespace ops {
             throw std::invalid_argument("Output tensor must have the correct shape");
         }
 
-        // const float* a_data = a.data();
-        // const float* b_data = b.data();
-        // float* output_data = output.data();
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+
+        // for(size_t i = 0; i < M; ++i) {
+        //     for(size_t k = 0; k < K; ++k) {
+        //         float a_value = a_data[i*K+k];
+        //         for(size_t j = 0; j < N; ++j) {
+        //             output_data[i*N+j] += a_value * b_data[k*N+j];
+        //         }
+        //     }
+        // }
         for(size_t i = 0; i < M; ++i) {
-            for(size_t j = 0; j < N; ++j) {
-                float sum = 0.0f;
+            for(size_t j = 0; j < N; j+=4) {
+                float out0 = output_data[i*N+j + 0];
+                float out1 = output_data[i*N+j + 1];
+                float out2 = output_data[i*N+j + 2];
+                float out3 = output_data[i*N+j + 3];
+
                 for(size_t k = 0; k < K; ++k) {
-                    sum += a.data()[i*K+k] * b.data()[k*N+j];
+                    float a_value = a_data[i*K + k];
+
+                    out0 += a_value * b_data[k*N+j + 0];
+                    out1 += a_value * b_data[k*N+j + 1];
+                    out2 += a_value * b_data[k*N+j + 2];
+                    out3 += a_value * b_data[k*N+j + 3];
                 }
-                output.data()[i*N+j] = sum;
+
+                output_data[i*N + j + 0] = out0;
+                output_data[i*N + j + 1] = out1;
+                output_data[i*N + j + 2] = out2;
+                output_data[i*N + j + 3] = out3;
             }
         }
     }
