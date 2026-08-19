@@ -38,6 +38,15 @@ target_link_libraries(operator_benchmark
         fast-inference
 )
 
+add_executable(matmul_benchmark
+    benchmarks/matmul_benchmark.cpp
+)
+
+target_link_libraries(matmul_benchmark
+    PRIVATE
+        fast-inference
+)
+
 target_compile_options(fast-inference
     PRIVATE
         -O3
