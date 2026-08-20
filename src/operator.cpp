@@ -54,7 +54,7 @@ namespace ops {
         }
     }
 
-    void matmul(const Tensor& a, const Tensor& b, Tensor& output) {
+    void matmul(const Tensor& a, const Tensor& b, Tensor& output, const size_t bs) {
         if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
             throw std::invalid_argument("Tensors must be 2D");
         }
@@ -87,26 +87,43 @@ namespace ops {
         //         }
         //     }
         // }
-        for(size_t i = 0; i < M; ++i) {
-            for(size_t j = 0; j < N; j+=4) {
-                float out0 = output_data[i*N+j + 0];
-                float out1 = output_data[i*N+j + 1];
-                float out2 = output_data[i*N+j + 2];
-                float out3 = output_data[i*N+j + 3];
+        // for(size_t i = 0; i < M; ++i) {
+        //     for(size_t j = 0; j < N; j+=4) {
+        //         float out0 = output_data[i*N+j + 0];
+        //         float out1 = output_data[i*N+j + 1];
+        //         float out2 = output_data[i*N+j + 2];
+        //         float out3 = output_data[i*N+j + 3];
 
-                for(size_t k = 0; k < K; ++k) {
-                    float a_value = a_data[i*K + k];
+        //         for(size_t k = 0; k < K; ++k) {
+        //             float a_value = a_data[i*K + k];
 
-                    out0 += a_value * b_data[k*N+j + 0];
-                    out1 += a_value * b_data[k*N+j + 1];
-                    out2 += a_value * b_data[k*N+j + 2];
-                    out3 += a_value * b_data[k*N+j + 3];
+        //             out0 += a_value * b_data[k*N+j + 0];
+        //             out1 += a_value * b_data[k*N+j + 1];
+        //             out2 += a_value * b_data[k*N+j + 2];
+        //             out3 += a_value * b_data[k*N+j + 3];
+        //         }
+
+        //         output_data[i*N + j + 0] = out0;
+        //         output_data[i*N + j + 1] = out1;
+        //         output_data[i*N + j + 2] = out2;
+        //         output_data[i*N + j + 3] = out3;
+        //     }
+        // }
+
+        for(size_t ii = 0; ii < M; ii += bs) {
+            for(size_t kk = 0; kk < K; kk += bs) {
+                for(size_t jj = 0; jj < N; jj += bs) {
+
+                    for(size_t i = ii; i < ii + bs; ++i) {
+                        for(size_t k = kk; k < kk + bs; ++k) {
+                            float a_value = a_data[i*K+k];
+                            for(size_t j = jj; j < jj + bs; ++j) {
+                                output_data[i*N+j] += a_value * b_data[k*N+j];
+                            }
+                        }
+                    }
+
                 }
-
-                output_data[i*N + j + 0] = out0;
-                output_data[i*N + j + 1] = out1;
-                output_data[i*N + j + 2] = out2;
-                output_data[i*N + j + 3] = out3;
             }
         }
     }

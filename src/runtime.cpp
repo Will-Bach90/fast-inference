@@ -14,8 +14,8 @@ namespace runtime {
         ops::relu(input, output);
     }
 
-    void Runtime::matmul(const Tensor& a, const Tensor& b, Tensor& output) {
-        ops::matmul(a, b, output);
-    }
+    // void Runtime::matmul(const Tensor& a, const Tensor& b, Tensor& output) {
+    //     ops::matmul(a, b, output);
+    // }
 
 }
