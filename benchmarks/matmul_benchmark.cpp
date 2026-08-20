@@ -46,13 +46,13 @@ int main() {
             }
 
             std::fill(output.data(), output.data() + output.size(), 0.0f);
-            ops::matmul(a, b, output, bs);
+            ops::matmul_tiled(a, b, output, bs);
 
             auto start = std::chrono::steady_clock::now();
 
             for(int i = 0; i < 10; ++i) {
                 std::fill(output.data(), output.data() + output.size(), 0.0f);
-                ops::matmul(a, b, output, bs);
+                ops::matmul_tiled(a, b, output, bs);
             }
 
             auto end = std::chrono::steady_clock::now();

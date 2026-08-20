@@ -1,5 +1,7 @@
 #include "operator.hpp"
 
+#include <arm_neon.h>
+
 namespace ops {
     void add(const Tensor& a, const Tensor& b, Tensor& output) {
         if(a.shape() != b.shape()) {
@@ -54,7 +56,73 @@ namespace ops {
         }
     }
 
-    void matmul(const Tensor& a, const Tensor& b, Tensor& output, const size_t bs) {
+    void matmul_naive(const Tensor& a, const Tensor& b, Tensor& output) {
+                if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
+            throw std::invalid_argument("Tensors must be 2D");
+        }
+
+        // (M x K) * (K x N) = (M x N)
+        const size_t M = a.shape()[0];
+        const size_t K = a.shape()[1];
+
+        const size_t K_b = b.shape()[0];
+        const size_t N = b.shape()[1];
+
+        if(K != K_b) {
+            throw std::invalid_argument("Inner dimensions must match for matmul");
+        }
+
+        if(M != output.shape()[0] || N != output.shape()[1]) {
+            throw std::invalid_argument("Output tensor must have the correct shape");
+        }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+        for(size_t i = 0; i < M; ++i) {
+            for(size_t j = 0; j < N; ++j) {
+                for(size_t k = 0; k < K; ++k) {
+                    output_data[i*N+j] += a_data[i*K+k] * b_data[k*N+j];
+                }
+            }
+        }
+    }
+    void matmul_ikj(const Tensor& a, const Tensor& b, Tensor& output) {
+        if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
+            throw std::invalid_argument("Tensors must be 2D");
+        }
+
+        // (M x K) * (K x N) = (M x N)
+        const size_t M = a.shape()[0];
+        const size_t K = a.shape()[1];
+
+        const size_t K_b = b.shape()[0];
+        const size_t N = b.shape()[1];
+
+        if(K != K_b) {
+            throw std::invalid_argument("Inner dimensions must match for matmul");
+        }
+
+        if(M != output.shape()[0] || N != output.shape()[1]) {
+            throw std::invalid_argument("Output tensor must have the correct shape");
+        }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+        
+        for(size_t i = 0; i < M; ++i) {
+            for(size_t k = 0; k < K; ++k) {
+                float a_value = a_data[i*K+k];
+                for(size_t j = 0; j < N; ++j) {
+                    output_data[i*N+j] += a_value * b_data[k*N+j];
+                }
+            }
+        }
+    }
+
+    void matmul_tiled(const Tensor& a, const Tensor& b, Tensor& output, const size_t bs) {
         if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
             throw std::invalid_argument("Tensors must be 2D");
         }
@@ -78,38 +146,6 @@ namespace ops {
         const float* b_data = b.data();
         float* output_data = output.data();
 
-
-        // for(size_t i = 0; i < M; ++i) {
-        //     for(size_t k = 0; k < K; ++k) {
-        //         float a_value = a_data[i*K+k];
-        //         for(size_t j = 0; j < N; ++j) {
-        //             output_data[i*N+j] += a_value * b_data[k*N+j];
-        //         }
-        //     }
-        // }
-        // for(size_t i = 0; i < M; ++i) {
-        //     for(size_t j = 0; j < N; j+=4) {
-        //         float out0 = output_data[i*N+j + 0];
-        //         float out1 = output_data[i*N+j + 1];
-        //         float out2 = output_data[i*N+j + 2];
-        //         float out3 = output_data[i*N+j + 3];
-
-        //         for(size_t k = 0; k < K; ++k) {
-        //             float a_value = a_data[i*K + k];
-
-        //             out0 += a_value * b_data[k*N+j + 0];
-        //             out1 += a_value * b_data[k*N+j + 1];
-        //             out2 += a_value * b_data[k*N+j + 2];
-        //             out3 += a_value * b_data[k*N+j + 3];
-        //         }
-
-        //         output_data[i*N + j + 0] = out0;
-        //         output_data[i*N + j + 1] = out1;
-        //         output_data[i*N + j + 2] = out2;
-        //         output_data[i*N + j + 3] = out3;
-        //     }
-        // }
-
         for(size_t ii = 0; ii < M; ii += bs) {
             for(size_t kk = 0; kk < K; kk += bs) {
                 for(size_t jj = 0; jj < N; jj += bs) {
@@ -126,6 +162,14 @@ namespace ops {
                 }
             }
         }
+    }
+
+
+    void matmul_neon(const Tensor& a, const Tensor& b, Tensor& output) {
+        // Placeholder for NEON-optimized matrix multiplication
+        // This function would contain the implementation using NEON intrinsics
+        // For now, we can call the naive implementation as a placeholder
+        matmul_naive(a, b, output);
     }
 
 }
