@@ -1,7 +1,5 @@
 #include "operator.hpp"
 
-#include <arm_neon.h>
-
 namespace ops {
     void add(const Tensor& a, const Tensor& b, Tensor& output) {
         if(a.shape() != b.shape()) {
@@ -54,6 +52,16 @@ namespace ops {
         for(size_t i = 0; i < a.size(); ++i) {
             output.data()[i] = a.data()[i] * b.data()[i];
         }
+    }
+
+    static inline float32x4_t matmul_kernel(const float* a, const float* b, float32x4_t c, size_t K, size_t N) {
+        for(size_t k = 0; k < K; ++k) {
+            float a_value = a[k];
+            float32x4_t b_vector = vld1q_f32(b + k*N);
+
+            c = vmlaq_n_f32(c, b_vector, a_value);
+        }
+        return c;
     }
 
     void matmul_naive(const Tensor& a, const Tensor& b, Tensor& output) {
@@ -166,10 +174,81 @@ namespace ops {
 
 
     void matmul_neon(const Tensor& a, const Tensor& b, Tensor& output) {
-        // Placeholder for NEON-optimized matrix multiplication
-        // This function would contain the implementation using NEON intrinsics
-        // For now, we can call the naive implementation as a placeholder
-        matmul_naive(a, b, output);
+        if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
+            throw std::invalid_argument("Tensors must be 2D");
+        }
+
+        // (M x K) * (K x N) = (M x N)
+        const size_t M = a.shape()[0];
+        const size_t K = a.shape()[1];
+
+        const size_t K_b = b.shape()[0];
+        const size_t N = b.shape()[1];
+
+        if(K != K_b) {
+            throw std::invalid_argument("Inner dimensions must match for matmul");
+        }
+
+        if(M != output.shape()[0] || N != output.shape()[1]) {
+            throw std::invalid_argument("Output tensor must have the correct shape");
+        }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+        for(size_t i = 0; i < M; ++i) {
+            for(size_t j = 0; j < N; j += 4) {
+                float32x4_t c = vld1q_f32(output_data + i*N + j);
+
+                c = matmul_kernel(a_data+i*K, b_data+j, c, K, N);
+
+                vst1q_f32(output_data + i*N + j, c);
+            }
+        }
+    }
+
+    void matmul_neon_ikj(const Tensor& a, const Tensor& b, Tensor& output) {
+        if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
+            throw std::invalid_argument("Tensors must be 2D");
+        }
+
+        // (M x K) * (K x N) = (M x N)
+        const size_t M = a.shape()[0];
+        const size_t K = a.shape()[1];
+
+        const size_t K_b = b.shape()[0];
+        const size_t N = b.shape()[1];
+
+        if(K != K_b) {
+            throw std::invalid_argument("Inner dimensions must match for matmul");
+        }
+
+        if(M != output.shape()[0] || N != output.shape()[1]) {
+            throw std::invalid_argument("Output tensor must have the correct shape");
+        }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+        for(size_t i = 0; i < M; ++i) {
+            for(size_t k = 0; k < K; ++k) {
+                float a_value = a_data[i*K + k];
+
+
+                float32x4_t a_vector = vdupq_n_f32(a_value);
+
+                for(size_t j = 0; j < N; j +=4) {
+                    float32x4_t b_vector = vld1q_f32(b_data + k*N + j);
+                    float32x4_t c_vector = vld1q_f32(output_data + i*N + j);
+
+                    c_vector = vmlaq_f32(c_vector, a_vector, b_vector);
+
+                    vst1q_f32(output_data + i*N + j, c_vector);
+                }
+            }
+        }
     }
 
 }
