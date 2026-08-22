@@ -37,11 +37,12 @@ int main() {
     std::fill(output.data(), output.data() + output.size(), 0.0f);
 
     std::vector<std::pair<std::string, std::function<void(const Tensor&, const Tensor&, Tensor&)>>> implementations = {
-        {"Naive", ops::matmul_naive},
+        // {"Naive", ops::matmul_naive},
         {"IKJ", ops::matmul_ikj},
-        {"Tiled (128)", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_tiled(a, b, output, 128); }},
-        {"NEON", ops::matmul_neon},
-        {"NEON IKJ", ops::matmul_neon_ikj}
+        {"NEON 4x4", ops::matmul_4x4},
+        // {"Tiled (128)", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_tiled(a, b, output, 128); }},
+        // {"NEON", ops::matmul_neon},
+        // {"NEON IKJ", ops::matmul_neon_ikj}
     };
 
     for(const auto& [name, func] : implementations) {
