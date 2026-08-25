@@ -17,13 +17,12 @@ int main() {
     //     << "K" << std::setw(15) << "Time (s)" 
     //     << std::setw(15) << "GFLOPS" << "\n";
 
+    constexpr size_t size = 1008;
     std::cout << std::left << std::setw(26) << 
-        "Implementation" << std::setw(20) << "1024 GFLOPS";
+        "Implementation" << std::setw(20) << "1008 GFLOPS";
     
     std::cout << "\n";
     std::cout << std::string(40, '-') << "\n";
-
-    constexpr size_t size = 1024;
 
     Tensor a({size, size});
     Tensor b({size, size});
@@ -41,7 +40,8 @@ int main() {
         {"IKJ", ops::matmul_ikj},
         {"NEON 4x4", ops::matmul_4x4},
         {"NEON 8x4", ops::matmul_8x4},
-        {"Tiled (128)", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_tiled(a, b, output, 128); }},
+        {"NEON 12x4", ops::matmul_12x4},
+        // {"Tiled (128)", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_tiled(a, b, output, 128); }},
         {"NEON", ops::matmul_neon},
         {"NEON IKJ", ops::matmul_neon_ikj}
     };
