@@ -17,9 +17,9 @@ int main() {
     //     << "K" << std::setw(15) << "Time (s)" 
     //     << std::setw(15) << "GFLOPS" << "\n";
 
-    constexpr size_t size = 2016;
+    constexpr size_t size = 1008;
     std::cout << std::left << std::setw(26) << 
-        "Implementation" << std::setw(20) << "2016 GFLOPS";
+        "Implementation" << std::setw(20) << "1008 GFLOPS";
     
     std::cout << "\n";
     std::cout << std::string(40, '-') << "\n";
@@ -41,6 +41,7 @@ int main() {
         {"NEON 4x4", ops::matmul_4x4},
         {"NEON 8x4", ops::matmul_8x4},
         {"NEON 12x4", ops::matmul_12x4},
+        {"NEON 14x4", ops::matmul_16x4},
         {"NEON 16x4", ops::matmul_16x4},
         // {"Tiled (128)", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_tiled(a, b, output, 128); }},
         {"NEON", ops::matmul_neon},
