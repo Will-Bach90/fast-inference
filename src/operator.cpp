@@ -635,4 +635,218 @@ namespace ops {
         }
     }
 
+
+
+
+
+    // ===========================≠≠≠≠≠≠≠=============++++++++==============================
+    // ===========================≠≠≠≠≠≠≠=============++++++++==============================
+    static inline void matmul_kernel_param(const float* a, const float* b, float* c, size_t K, size_t N, size_t height, size_t width) {
+        std::vector<float32x4_t> c_vec;
+
+        for(int i = 0; i < height; ++i) {
+            c_vec.push_back(vld1q_f32(c + i*N));
+        }
+
+        for(size_t k = 0; k < K; ++k) {
+            float32x4_t b_vec = vld1q_f32(b + k*N);
+
+            for(int i = 0; i < height; ++i) {
+                c_vec[i] = vmlaq_n_f32(c_vec[i], b_vec, a[i*N + k]);
+            }
+
+        }
+
+        for(int i = 0; i < height; ++i) {
+            vst1q_f32(c + i*N, c_vec[i]);
+        }
+    }
+
+    void matmul_param(const Tensor& a, const Tensor& b, Tensor& output, size_t height, size_t width) {
+        if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
+            throw std::invalid_argument("Tensors must be 2D");
+        }
+
+        // (M x K) * (K x N) = (M x N)
+        const size_t M = a.shape()[0];
+        const size_t K = a.shape()[1];
+
+        const size_t K_b = b.shape()[0];
+        const size_t N = b.shape()[1];
+
+        if(K != K_b) {
+            throw std::invalid_argument("Inner dimensions must match for matmul");
+        }
+
+        if(M != output.shape()[0] || N != output.shape()[1]) {
+            throw std::invalid_argument("Output tensor must have the correct shape");
+        }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+        for(size_t i = 0; i < M; i+=height) {
+            for(size_t j = 0; j < N; j+=width) {
+                matmul_kernel_param(a_data + i*K, b_data+j, output_data + i*N+j, K, N, height, width);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+    // ===========================≠≠≠≠≠≠≠=============++++++++==============================
+    static inline void matmul_kernel_8x8(const float* a, const float* b, float* c, size_t K, size_t N) {
+        float32x4_t c00 = vld1q_f32(c);
+        float32x4_t c01 = vld1q_f32(c + 4);
+
+        float32x4_t c10 = vld1q_f32(c + N);
+        float32x4_t c11 = vld1q_f32(c + N + 4);
+
+        float32x4_t c20 = vld1q_f32(c + 2*N);
+        float32x4_t c21 = vld1q_f32(c + 2*N + 4);
+
+        float32x4_t c30 = vld1q_f32(c + 3*N);
+        float32x4_t c31 = vld1q_f32(c + 3*N + 4);
+
+        float32x4_t c40 = vld1q_f32(c + 4*N);
+        float32x4_t c41 = vld1q_f32(c + 4*N + 4);
+
+        float32x4_t c50 = vld1q_f32(c + 5*N);
+        float32x4_t c51 = vld1q_f32(c + 5*N + 4);
+
+        float32x4_t c60 = vld1q_f32(c + 6*N);
+        float32x4_t c61 = vld1q_f32(c + 6*N + 4);
+
+        float32x4_t c70 = vld1q_f32(c + 7*N);
+        float32x4_t c71 = vld1q_f32(c + 7*N + 4);
+
+        // float32x4_t c80 = vld1q_f32(c + 8*N);
+        // float32x4_t c81 = vld1q_f32(c + 8*N + 4);
+
+        // float32x4_t c90 = vld1q_f32(c + 9*N);
+        // float32x4_t c91 = vld1q_f32(c + 9*N + 4);
+
+        // float32x4_t c10_0 = vld1q_f32(c + 10*N);
+        // float32x4_t c10_1 = vld1q_f32(c + 10*N + 4);
+
+        // float32x4_t c11_0 = vld1q_f32(c + 11*N);
+        // float32x4_t c11_1 = vld1q_f32(c + 11*N + 4);
+
+        for(size_t k = 0; k < K; ++k) {
+            float32x4_t b0 = vld1q_f32(b + k*N);
+            float32x4_t b1 = vld1q_f32(b + k*N + 4);
+            
+            c00 = vmlaq_n_f32(c00, b0, a[k]);
+            c01 = vmlaq_n_f32(c01, b1, a[k]);
+
+            c10 = vmlaq_n_f32(c10, b0, a[N+k]);
+            c11 = vmlaq_n_f32(c11, b1, a[N+k]);
+
+            c20 = vmlaq_n_f32(c20, b0, a[2*N+k]);
+            c21 = vmlaq_n_f32(c21, b1, a[2*N+k]);
+
+            c30 = vmlaq_n_f32(c30, b0, a[3*N+k]);
+            c31 = vmlaq_n_f32(c31, b1, a[3*N+k]);
+
+            c40 = vmlaq_n_f32(c40, b0, a[4*N+k]);
+            c41 = vmlaq_n_f32(c41, b1, a[4*N+k]);
+
+            c50 = vmlaq_n_f32(c50, b0, a[5*N+k]);
+            c51 = vmlaq_n_f32(c51, b1, a[5*N+k]);
+
+            c60 = vmlaq_n_f32(c60, b0, a[6*N+k]);
+            c61 = vmlaq_n_f32(c61, b1, a[6*N+k]);
+
+            c70 = vmlaq_n_f32(c70, b0, a[7*N+k]);
+            c71 = vmlaq_n_f32(c71, b1, a[7*N+k]);
+
+            // c80 = vmlaq_n_f32(c80, b0, a[8*N+k]);
+            // c81 = vmlaq_n_f32(c81, b1, a[8*N+k]);
+
+            // c90 = vmlaq_n_f32(c90, b0, a[9*N+k]);
+            // c91 = vmlaq_n_f32(c91, b1, a[9*N+k]);
+
+            // c10_0 = vmlaq_n_f32(c10_0, b0, a[10*N+k]);
+            // c10_1 = vmlaq_n_f32(c10_1, b1, a[10*N+k]);
+
+            // c11_0 = vmlaq_n_f32(c11_0, b0, a[11*N+k]);
+            // c11_1 = vmlaq_n_f32(c11_1, b1, a[11*N+k]);
+
+        }
+
+        vst1q_f32(c, c00);
+        vst1q_f32(c + 4, c01);
+
+        vst1q_f32(c + N, c10);
+        vst1q_f32(c + N + 4, c11);
+
+        vst1q_f32(c + 2*N, c20);
+        vst1q_f32(c + 2*N + 4, c21);
+
+        vst1q_f32(c + 3*N, c30);
+        vst1q_f32(c + 3*N + 4, c31);
+
+        vst1q_f32(c + 4*N, c40);
+        vst1q_f32(c + 4*N + 4, c41);
+
+        vst1q_f32(c + 5*N, c50);
+        vst1q_f32(c + 5*N + 4, c51);
+
+        vst1q_f32(c + 6*N, c60);
+        vst1q_f32(c + 6*N + 4, c61);
+
+        vst1q_f32(c + 7*N, c70);
+        vst1q_f32(c + 7*N + 4, c71);
+
+        // vst1q_f32(c + 8*N, c80);
+        // vst1q_f32(c + 8*N + 4, c81);
+
+        // vst1q_f32(c + 9*N, c90);
+        // vst1q_f32(c + 9*N + 4, c91);
+
+        // vst1q_f32(c + 10*N, c10_0);
+        // vst1q_f32(c + 10*N + 4, c10_1);
+
+        // vst1q_f32(c + 11*N, c11_0);
+        // vst1q_f32(c + 11*N + 4, c11_1);
+    }
+
+
+    void matmul_8x8(const Tensor& a, const Tensor& b, Tensor& output) {
+        if(a.ndim() != 2 || b.ndim() != 2 || output.ndim() != 2) {
+            throw std::invalid_argument("Tensors must be 2D");
+        }
+
+        // (M x K) * (K x N) = (M x N)
+        const size_t M = a.shape()[0];
+        const size_t K = a.shape()[1];
+
+        const size_t K_b = b.shape()[0];
+        const size_t N = b.shape()[1];
+
+        if(K != K_b) {
+            throw std::invalid_argument("Inner dimensions must match for matmul");
+        }
+
+        if(M != output.shape()[0] || N != output.shape()[1]) {
+            throw std::invalid_argument("Output tensor must have the correct shape");
+        }
+
+        const float* a_data = a.data();
+        const float* b_data = b.data();
+        float* output_data = output.data();
+
+        for(size_t i = 0; i < M; i+=8) {
+            for(size_t j = 0; j < N; j+=8) {
+                matmul_kernel_8x8(a_data + i*K, b_data+j, output_data + i*N+j, K, N);
+            }
+        }
+    }
+
 }

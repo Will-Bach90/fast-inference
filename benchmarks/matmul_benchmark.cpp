@@ -36,16 +36,18 @@ int main() {
     std::fill(output.data(), output.data() + output.size(), 0.0f);
 
     std::vector<std::pair<std::string, std::function<void(const Tensor&, const Tensor&, Tensor&)>>> implementations = {
-        {"Naive", ops::matmul_naive},
-        {"IKJ", ops::matmul_ikj},
+        // {"Naive", ops::matmul_naive},
+        // {"IKJ", ops::matmul_ikj},
         {"NEON 4x4", ops::matmul_4x4},
         {"NEON 8x4", ops::matmul_8x4},
         {"NEON 12x4", ops::matmul_12x4},
-        {"NEON 14x4", ops::matmul_16x4},
+        {"NEON 12x8", ops::matmul_8x8},
+        // {"NEON 14x4", ops::matmul_14x4},
         {"NEON 16x4", ops::matmul_16x4},
+        // {"NEON PARAM 16x16", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_param(a, b, output, 16, 16); }}
         // {"Tiled (128)", [](const Tensor& a, const Tensor& b, Tensor& output) { ops::matmul_tiled(a, b, output, 128); }},
-        {"NEON", ops::matmul_neon},
-        {"NEON IKJ", ops::matmul_neon_ikj}
+        // {"NEON", ops::matmul_neon},
+        // {"NEON IKJ", ops::matmul_neon_ikj}
     };
 
     for(const auto& [name, func] : implementations) {

@@ -20,12 +20,22 @@ namespace ops {
     void matmul_14x4(const Tensor& a, const Tensor& b, Tensor& output);
     void matmul_16x4(const Tensor& a, const Tensor& b, Tensor& output);
 
+    void matmul_8x8(const Tensor& a, const Tensor& b, Tensor& output);
+
+    void matmul_param(const Tensor& a, const Tensor& b, Tensor& output, size_t height, size_t width);
+
     static inline float32x4_t matmul_kernel(const float* a, const float* b, float32x4_t c, size_t K, size_t N);
     static inline void matmul_kernel_4x4(const float* a, const float* b, float* c, size_t K, size_t N);
     static inline void matmul_kernel_8x4(const float* a, const float* b, float* c, size_t K, size_t N);
     static inline void matmul_kernel_12x4(const float* a, const float* b, float* c, size_t K, size_t N);
     static inline void matmul_kernel_14x4(const float* a, const float* b, float* c, size_t K, size_t N);
     static inline void matmul_kernel_16x4(const float* a, const float* b, float* c, size_t K, size_t N);
+
+
+    static inline void matmul_kernel_8x8(const float* a, const float* b, float* c, size_t K, size_t N);
+
+    static inline void matmul_kernel_param(const float* a, const float* b, float* c, size_t K, size_t N, size_t height, size_t width);
+
 }
 
 #endif
